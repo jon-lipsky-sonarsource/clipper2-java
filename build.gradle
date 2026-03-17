@@ -1,5 +1,7 @@
 plugins {
     id 'java-library'
+    id 'jacoco'
+    id 'org.sonarqube' version '4.4.1.3373'
 }
 
 group = 'io.github.angusj'
@@ -32,5 +34,22 @@ test {
     testLogging {
         events 'passed', 'failed', 'skipped'
         showStandardStreams = true
+    }
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+    }
+}
+
+sonarqube {
+    properties {
+        property 'sonar.projectKey', 'jon-lipsky-sonarsource_clipper2-java'
+        property 'sonar.organization', 'jon-lipsky-sonarsource'
+        property 'sonar.host.url', 'https://sonarcloud.io'
+        property 'sonar.coverage.jacoco.xmlReportPaths', "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
     }
 }
