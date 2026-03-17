@@ -48,7 +48,7 @@ jacocoTestReport {
 sonar {
     properties {
         def sonarProps = new Properties()
-        file('sonar-project.properties').withInputStream { sonarProps.load(it) }
+        file('sonar.properties').withInputStream { sonarProps.load(it) }
         sonarProps.each { key, value -> property key, value }
     }
 }
