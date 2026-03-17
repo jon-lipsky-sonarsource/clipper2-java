@@ -45,11 +45,12 @@ jacocoTestReport {
     }
 }
 
-sonarqube {
+sonar {
     properties {
         property 'sonar.projectKey', 'jon-lipsky-sonarsource_clipper2-java'
         property 'sonar.organization', 'jon-lipsky-sonarsource'
         property 'sonar.host.url', 'https://sonarcloud.io'
         property 'sonar.coverage.jacoco.xmlReportPaths', "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+        property 'sonar.gradle.skipCompile', 'true'
     }
 }
