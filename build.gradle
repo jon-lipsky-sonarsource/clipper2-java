@@ -1,0 +1,36 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'io.github.angusj'
+version = '1.4.0'
+
+java {
+    // Use installed JDK version — avoids toolchain download hanging
+    // Change to VERSION_17 if cross-compilation is needed
+    sourceCompatibility = JavaVersion.current()
+    targetCompatibility = JavaVersion.current()
+}
+
+repositories {
+    // Local flat-dir repo for offline/cached JUnit jars
+    flatDir { dirs '/tmp/junit-jars' }
+    mavenCentral()
+}
+
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events 'passed', 'failed', 'skipped'
+        showStandardStreams = true
+    }
+}
