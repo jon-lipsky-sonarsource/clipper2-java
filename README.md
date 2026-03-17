@@ -5,6 +5,8 @@ A Java port of [Clipper2](https://github.com/AngusJohnson/Clipper2), the polygon
 > Original C# library: https://github.com/AngusJohnson/Clipper2
 > License: [Boost Software License 1.0](https://www.boost.org/LICENSE_1_0.txt)
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=jon-lipsky-sonarsource_clipper2-java&metric=alert_status&token=c72e28f3198a9949ee462f1d3712b8cace2d16dc)](https://sonarcloud.io/summary/new_code?id=jon-lipsky-sonarsource_clipper2-java)
+
 ---
 
 ## What is Clipper2?
