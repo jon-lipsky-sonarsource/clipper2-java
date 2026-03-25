@@ -1177,4 +1177,62 @@ public final class Clipper {
     for (clipper2.engine.PolyPathBase child : polytree)
       showPolyPathStructure((PolyPathD) child, 1);
   }
+
+  // -------------------------------------------------------------------------
+  // Perimeter — PR flow demo
+  // -------------------------------------------------------------------------
+
+  /**
+   * Returns the perimeter (total arc length) of a path.
+   *
+   * @param path       the path; must not be {@code null}
+   * @param closedPath if {@code true}, includes the edge from the last vertex
+   *                   back to the first
+   * @return the perimeter; 0.0 for paths with fewer than 2 vertices
+   */
+  public static double perimeter(Path64 path, boolean closedPath) {
+    int n = path.size();
+    if (n < 2) return 0.0;
+    double total = 0;
+    for (int i = 1; i < n; i++) {
+      double dx = path.get(i).x - path.get(i - 1).x;
+      double dy = path.get(i).y - path.get(i - 1).y;
+      total += Math.hypot(dx, dy);
+    }
+    if (closedPath) {
+      double dx = path.get(0).x - path.get(n - 1).x;
+      double dy = path.get(0).y - path.get(n - 1).y;
+      total += Math.hypot(dx, dy);
+    }
+    return total;
+  }
+
+  /** Convenience overload treating the path as closed. */
+  public static double perimeter(Path64 path) {
+    return perimeter(path, true);
+  }
+
+  /** Double-precision overload. */
+  public static double perimeter(PathD path, boolean closedPath) {
+    int n = path.size();
+    if (n < 2) return 0.0;
+    double total = 0;
+    for (int i = 1; i < n; i++) {
+      double dx = path.get(i).x - path.get(i - 1).x;
+      double dy = path.get(i).y - path.get(i - 1).y;
+      total += Math.hypot(dx, dy);
+    }
+    if (closedPath) {
+      double dx = path.get(0).x - path.get(n - 1).x;
+      double dy = path.get(0).y - path.get(n - 1).y;
+      total += Math.hypot(dx, dy);
+    }
+    return total;
+  }
+
+  /** Double-precision convenience overload treating path as closed. */
+  public static double perimeter(PathD path) {
+    return perimeter(path, true);
+  }
+
 }
