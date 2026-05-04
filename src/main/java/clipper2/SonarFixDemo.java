@@ -1,5 +1,7 @@
 package clipper2;
 
+import java.util.logging.Logger;
+
 /**
  * Sample class with intentional SonarQube issues used to exercise the
  * sonar-fix workflow end-to-end.
@@ -19,22 +21,25 @@ package clipper2;
  */
 public class SonarFixDemo {
 
+    private static final Logger LOGGER = Logger.getLogger(SonarFixDemo.class.getName());
+
+    private SonarFixDemo() {
+        /* utility class */
+    }
+
     public static void demonstrateUnusedVariable() {
-        String unused = "this is never used";
-        int alsoUnused = 42;
-        System.out.println("hello from the demo");
+        LOGGER.info("hello from the demo");
     }
 
     public static int demonstrateDeadStore(int input) {
-        int result = input * 2;
-        result = input * 3;
-        return result;
+        return input * 3;
     }
 
     public static void demonstrateEmptyMethod() {
+        // intentionally left empty for demonstration purposes
     }
 
-    public static int demonstrateUnusedParameter(int useful, int unusedParam) {
+    public static int demonstrateUnusedParameter(int useful) {
         return useful * 2;
     }
 }
