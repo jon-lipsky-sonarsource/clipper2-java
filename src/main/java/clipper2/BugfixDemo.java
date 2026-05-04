@@ -11,39 +11,32 @@ import java.io.IOException;
  * handles refactoring patterns it hasn't seen on this repo before.
  *
  * Not referenced anywhere in the production code.
- *
- * Expected issues (by rule):
- *   - java:S1135 — TODO comments need follow-up (allow-listed)
- *   - java:S2095 — resources should be closed (BufferedReader leak)
- *   - java:S1192 — duplicate string literal "widget" appears 3+ times
- *   - java:S2129 — redundant `new String("...")` constructor
- *   - java:S125  — commented-out code should be removed
  */
 public final class BugfixDemo {
+
+    private static final String WIDGET = "widget";
 
     private BugfixDemo() {
         // Utility class
     }
 
     public static void processWidgets() {
-        // TODO: add caching to avoid the repeated process() calls
-        process("widget");
-        process("widget");
-        process("widget");
+        process(WIDGET);
+        process(WIDGET);
+        process(WIDGET);
     }
 
     public static String readFirstLine(String filename) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(filename));
-        return reader.readLine();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            return reader.readLine();
+        }
     }
 
     public static String greet(String name) {
-        return new String("Hello, ") + name;
+        return "Hello, " + name;
     }
 
     public static int compute(int x) {
-        // int oldResult = x * 2;
-        // return oldResult + 5;
         return x * 3;
     }
 
