@@ -21,40 +21,18 @@ public final class IdiomDemo {
     }
 
     public static boolean isValid(String s) {
-        return s != null & s.length() > 0;
+        return s != null && !s.isEmpty();
     }
 
     public static String classify(int x) {
-        return x < 0 ? "negative" : x == 0 ? "zero" : x < 10 ? "small" : "large";
+        if (x < 0) {
+            return "negative";
+        }
+        if (x == 0) {
+            return "zero";
+        }
+        return x < 10 ? "small" : "large";
     }
 
-    public static final class Point {
-        private final int x;
-        private final int y;
-
-        public Point(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        public int getX() {
-            return x;
-        }
-
-        public int getY() {
-            return y;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (!(o instanceof Point)) {
-                return false;
-            }
-            Point p = (Point) o;
-            return x == p.x && y == p.y;
-        }
-    }
+    public record Point(int x, int y) {}
 }
