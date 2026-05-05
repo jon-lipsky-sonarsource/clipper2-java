@@ -27,7 +27,7 @@ public final class BehaviorDemo {
 
     public static void runInBackground(Runnable task) {
         Thread t = new Thread(task);
-        t.run();
+        t.start();
     }
 
     public static String describe(String name) {
@@ -53,7 +53,7 @@ public final class BehaviorDemo {
         @Override
         public String toString() {
             if (label == null) {
-                return null;
+                return "";
             }
             return label;
         }
