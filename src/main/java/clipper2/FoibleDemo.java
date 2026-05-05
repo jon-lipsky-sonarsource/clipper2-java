@@ -44,17 +44,23 @@ public class FoibleDemo {
     // flatten the structure.
     public int processMatrix(int[][] matrix) {
         int sum = 0;
-        if (matrix != null) {
-            for (int[] row : matrix) {
-                if (row != null) {
-                    if (row.length > 0) {
-                        for (int v : row) {
-                            if (v > 0) {
-                                sum += v;
-                            }
-                        }
-                    }
-                }
+        if (matrix == null) {
+            return sum;
+        }
+        for (int[] row : matrix) {
+            sum += sumPositiveValues(row);
+        }
+        return sum;
+    }
+
+    private static int sumPositiveValues(int[] row) {
+        int sum = 0;
+        if (row == null) {
+            return sum;
+        }
+        for (int v : row) {
+            if (v > 0) {
+                sum += v;
             }
         }
         return sum;
