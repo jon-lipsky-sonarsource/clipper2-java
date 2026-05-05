@@ -23,26 +23,21 @@ public class LapseDemo {
     // Collections.unmodifiableList, or change to an immutable List.of().
     public static List<String> ALLOWED_TYPES = new ArrayList<>();
 
-    // Triggers java:S2885 — SimpleDateFormat is not thread-safe, so
-    // sharing one as a static field across threads can corrupt parsing
-    // or formatting state. Fix shapes: switch to DateTimeFormatter
-    // (java.time, immutable), construct per-call, or wrap in ThreadLocal.
-    private static final SimpleDateFormat ISO_DATE_FORMAT =
+    // SimpleDateFormat is not thread-safe, so keep one formatter per
+    // LapseDemo instance instead of sharing it as a static field.
+    private final SimpleDateFormat isoDateFormat =
             new SimpleDateFormat("yyyy-MM-dd");
 
-    // Triggers java:S2696 — recordProcessed() is an instance method
-    // but writes to a static field, polluting shared state across all
-    // instances of the class. Fix shapes: convert to an instance field
-    // (preferred), or rename to a static method to make the class-level
-    // intent explicit.
-    private static int processedCount = 0;
+    // recordProcessed() is an instance method, so track processed items
+    // on the current LapseDemo instance.
+    private int processedCount = 0;
 
     public void recordProcessed() {
         processedCount++;
     }
 
     public String formatDate(Date date) {
-        return ISO_DATE_FORMAT.format(date);
+        return isoDateFormat.format(date);
     }
 
     // Triggers java:S2674 — InputStream.read(byte[]) may return fewer
