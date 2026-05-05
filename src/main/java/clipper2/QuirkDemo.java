@@ -13,31 +13,16 @@ public class QuirkDemo {
     private static QuirkDemo INSTANCE;
     private int payload;
 
-    // Triggers java:S2168 — double-checked locking without `volatile`.
-    // Without volatile on INSTANCE, the JVM is allowed to reorder the
-    // constructor body and the field write, so a second thread can
-    // observe a non-null INSTANCE pointing at a partially-constructed
-    // object. Classic concurrency bug. Fix: declare INSTANCE volatile,
-    // or switch to the initialization-on-demand holder idiom.
-    public static QuirkDemo getInstance() {
+    public static synchronized QuirkDemo getInstance() {
         if (INSTANCE == null) {
-            synchronized (QuirkDemo.class) {
-                if (INSTANCE == null) {
-                    INSTANCE = new QuirkDemo();
-                }
-            }
+            INSTANCE = new QuirkDemo();
         }
         return INSTANCE;
     }
 
-    // Triggers java:S2447 — a `Boolean`-returning method returns `null`
-    // on the `payload == 0` branch. Callers that auto-unbox the return
-    // value (e.g. `if (obj.hasPayload())`) get a NullPointerException.
-    // Fix: return Boolean.FALSE explicitly, or change the return type
-    // to primitive boolean and pick a sensible default.
     public Boolean hasPayload() {
         if (payload == 0) {
-            return null;
+            return Boolean.FALSE;
         }
         return Boolean.TRUE;
     }
