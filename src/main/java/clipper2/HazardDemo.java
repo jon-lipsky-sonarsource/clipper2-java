@@ -15,17 +15,7 @@ package clipper2;
  *   - java:S1872 — comparing classes by their name string instead of
  *                   using `instanceof` or class-literal equality.
  */
-public final class HazardDemo {
-
-    private final String label;
-
-    public HazardDemo(String label) {
-        this.label = label;
-    }
-
-    public String getLabel() {
-        return label;
-    }
+public record HazardDemo(String label) {
 
     public boolean process(Boolean enabled) {
         if (enabled) {
@@ -43,6 +33,6 @@ public final class HazardDemo {
     }
 
     public boolean isMatchingType(Object obj) {
-        return obj.getClass().getName().equals("clipper2.HazardDemo");
+        return obj instanceof HazardDemo;
     }
 }
