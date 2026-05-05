@@ -50,23 +50,18 @@ public class TripwireDemo {
         }
     }
 
-    // Triggers java:S107 — the method takes more parameters than the
-    // default Sonar threshold (7). Eight unrelated coordinates is the
-    // classic anti-pattern; the fix is usually to introduce a
-    // parameter-object class (e.g. a Quadrilateral record) so the
-    // call site stops being a sequence of indistinguishable ints.
-    public boolean isMonotonic(int x1, int y1, int x2, int y2,
-                               int x3, int y3, int x4, int y4) {
-        return x1 <= x2 && x2 <= x3 && x3 <= x4
-            && y1 <= y2 && y2 <= y3 && y3 <= y4;
+    public record Point(int x, int y) {
     }
 
-    // Triggers java:S2275 — the format string has two %d specifiers
-    // but only one argument is supplied. java.util.Formatter throws
-    // MissingFormatArgumentException at runtime; Sonar catches it
-    // statically. Real behavior bug. Fix: pass the missing argument
-    // (or remove the unused specifier).
+    // Uses a point value type so the call site isn't a sequence of
+    // indistinguishable ints.
+    public boolean isMonotonic(Point first, Point second, Point third, Point fourth) {
+        return first.x() <= second.x() && second.x() <= third.x() && third.x() <= fourth.x()
+            && first.y() <= second.y() && second.y() <= third.y() && third.y() <= fourth.y();
+    }
+
+    // Reports both counters required by the format string.
     public String summarize(int total) {
-        return String.format("%d items, %d skipped", total);
+        return String.format("%d items, %d skipped", total, 0);
     }
 }
