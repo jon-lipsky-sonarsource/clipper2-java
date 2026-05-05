@@ -22,10 +22,6 @@ public final class RefactorDemo {
         // Utility class
     }
 
-    private static String unusedPrivateHelper(int seed) {
-        return "result-" + seed;
-    }
-
     public static String findMatch(String input) {
         if (input.equals("expected")) {
             return "matched";
@@ -45,7 +41,7 @@ public final class RefactorDemo {
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) {
-            // intentionally swallowed
+            Thread.currentThread().interrupt();
         }
     }
 }
