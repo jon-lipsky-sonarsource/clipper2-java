@@ -266,15 +266,48 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.pr-info.outputs.pr_number }}
         run: |
-          # Counts commits on the PR whose message starts with FIX_COMMIT_PREFIX.
-          # This prefix is mandated by the reusable workflow's agent prompt,
-          # so each prior fix run shows up as exactly one matching commit.
-          ATTEMPTS=$(gh api \
+          # Claude/Codex path: count commits whose message starts with
+          # FIX_COMMIT_PREFIX. The workflow owns the commit and mandates
+          # that prefix, so every prior fix run shows up as exactly one
+          # matching commit.
+          FIX_COMMITS=$(gh api \
             "repos/${{ github.repository }}/pulls/${PR_NUMBER}/commits" \
             --paginate \
             --jq "[.[] | select(.commit.message | startswith(\"${FIX_COMMIT_PREFIX}\"))] | length")
-          echo "Prior fix commits on PR #${PR_NUMBER}: ${ATTEMPTS}"
+
+          # Copilot path: Copilot runs out-of-band and uses its own commit
+          # message format, so FIX_COMMITS stays 0 on the Copilot path and
+          # the loop guard never trips. Instead, count how many times our
+          # workflow has already posted an @copilot dispatch comment.
+          COPILOT_DISPATCHES=$(gh api \
+            "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
+            --paginate \
+            --jq '[.[] | select(.body | startswith("@copilot Please fix the following SonarQube"))] | length')
+
+          # Use whichever is higher as the canonical attempt count.
+          if [ "$COPILOT_DISPATCHES" -gt "$FIX_COMMITS" ]; then
+            ATTEMPTS="$COPILOT_DISPATCHES"
+          else
+            ATTEMPTS="$FIX_COMMITS"
+          fi
+
+          # Detect if the most recent PR commit was from Copilot. When true,
+          # reviewer-guide triggers are suppressed — Copilot is either still
+          # working or just finished; the QG-bot drives the next iteration if
+          # issues remain. Keeps PR comment noise on par with Claude/Codex.
+          LAST_AUTHOR=$(gh api \
+            "repos/${{ github.repository }}/pulls/${PR_NUMBER}/commits" \
+            --paginate \
+            --jq 'last | .author.login // .commit.author.name' 2>/dev/null || echo "")
+          if echo "$LAST_AUTHOR" | grep -qi "copilot"; then
+            COPILOT_JUST_COMMITTED="true"
+          else
+            COPILOT_JUST_COMMITTED="false"
+          fi
+
+          echo "Prior fix commits: ${FIX_COMMITS}, Copilot dispatches: ${COPILOT_DISPATCHES} → attempts=${ATTEMPTS}, copilot_just_committed=${COPILOT_JUST_COMMITTED}"
           echo "attempts=${ATTEMPTS}" >> "$GITHUB_OUTPUT"
+          echo "copilot_just_committed=${COPILOT_JUST_COMMITTED}" >> "$GITHUB_OUTPUT"
 
       - name: Decide whether to run fix
         id: decide
@@ -283,6 +316,7 @@ jobs:
           TRIGGER="${{ steps.classify.outputs.trigger }}"
           QG_FAILED="${{ steps.parse-comment.outputs.quality_gate_failed }}"
           ATTEMPTS="${{ steps.count-attempts.outputs.attempts }}"
+          COPILOT_JUST_COMMITTED="${{ steps.count-attempts.outputs.copilot_just_committed }}"
 
           # Don't run on closed/merged PRs
           if [ "$PR_STATE" != "open" ]; then
@@ -300,22 +334,22 @@ jobs:
           fi
 
           if [ "$TRIGGER" = "reviewer-guide" ]; then
-            # The reviewer-guide bot fires on every analysis, regardless
-            # of QG state. Skip the QG check and run triage so the user
-            # gets an updated post-fix state report. The agent dispatch
-            # downstream is gated on has_auto_fix in the reusable
-            # workflow, so an "all clear" run cheaply produces an
-            # updated triage comment and exits.
-            if [ "$ATTEMPTS" -gt "$MAX_FIX_ATTEMPTS" ]; then
-              echo "Loop guard tripped: ${ATTEMPTS} prior fix commits on this PR (max ${MAX_FIX_ATTEMPTS})."
-              echo "Triage comment will still be posted, but agent dispatch will be skipped — comment '/sonar-fix' to override."
-              # Falling through with should_run=true is fine: the
-              # reusable workflow's per-job filters skip the agents.
-              # We just want the triage comment to land.
-              echo "should_run=true" >> "$GITHUB_OUTPUT"
+            # Suppress reviewer-guide triggers when Copilot just committed.
+            # Copilot commits per-issue, so each incremental push fires a new
+            # analysis cycle. Without this guard, we'd re-dispatch Copilot on
+            # every intermediate commit while it's still mid-run. The QG-bot
+            # drives re-dispatch once Copilot's full run settles.
+            if [ "$COPILOT_JUST_COMMITTED" = "true" ]; then
+              echo "Reviewer-guide trigger but Copilot recently committed — suppressing to reduce noise."
+              echo "should_run=false" >> "$GITHUB_OUTPUT"
               exit 0
             fi
-            echo "Reviewer-guide trigger; running triage to refresh remaining-issues report."
+            if [ "$ATTEMPTS" -gt "$MAX_FIX_ATTEMPTS" ]; then
+              echo "Loop guard tripped: ${ATTEMPTS} prior fix commits on this PR (max ${MAX_FIX_ATTEMPTS}). Comment '/sonar-fix' to override."
+              echo "should_run=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "Reviewer-guide trigger; running."
             echo "should_run=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
