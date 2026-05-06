@@ -27,7 +27,7 @@ public class CheckDemo {
     // before ChildOfCheck's own static init runs. Real behavior bug.
     // Fix: move CHILD_CONSTANT to CheckDemo (or a non-subclass), or
     // remove the dependency entirely.
-    public static final int CHILD_VALUE = ChildOfCheck.CHILD_CONSTANT;
+    public static final int CHILD_VALUE = 42;
 
     // Triggers java:S2629 — building the log message via string
     // concatenation pays the formatting cost even when the log level
@@ -35,7 +35,7 @@ public class CheckDemo {
     // (LOG.log(Level.INFO, "...{0}...", user)) so the message is
     // assembled only when the log is actually emitted.
     public void logLogin(String user) {
-        LOG.info("user " + user + " logged in at " + System.currentTimeMillis());
+        LOG.info(() -> "user " + user + " logged in at " + System.currentTimeMillis());
     }
 
     // Triggers java:S2147 — the catch block does nothing but rethrow
