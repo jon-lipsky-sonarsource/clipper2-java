@@ -361,6 +361,18 @@ jobs:
             exit 0
           fi
 
+          # Suppress QG-bot re-dispatch when Copilot has committed since our
+          # last dispatch. The QG-bot edits its comment on every analysis
+          # (not just on QG status changes), so without this check we'd
+          # re-dispatch Copilot after every incremental commit while it's
+          # still mid-run. If QG is still failing after Copilot's commits,
+          # comment '/sonar-fix' to force another attempt.
+          if [ "$COPILOT_JUST_COMMITTED" = "true" ]; then
+            echo "QG-bot trigger but Copilot recently committed — suppressing to reduce noise. Comment '/sonar-fix' to force another attempt."
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           if [ "$ATTEMPTS" -gt "$MAX_FIX_ATTEMPTS" ]; then
             echo "Loop guard tripped: ${ATTEMPTS} prior fix commits on this PR (max ${MAX_FIX_ATTEMPTS})."
             echo "Comment '/sonar-fix' on the PR to override and force another attempt."
@@ -378,7 +390,7 @@ jobs:
     name: "Fix"
     needs: detect-and-resolve
     if: needs.detect-and-resolve.outputs.should_run == 'true'
-    uses: jon-lipsky-sonarsource/sonar-fix/.github/workflows/fix.yml@main
+    uses: jon-lipsky-sonarsource/sonar-fix/.github/workflows/fix.yml@v1
     with:
       sonar-project-key: ${{ vars.SONAR_PROJECT_KEY }}
       sonar-org: ${{ vars.SONAR_ORG || vars.COPILOT_MCP_SONAR_ORG }}
