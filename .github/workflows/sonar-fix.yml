@@ -344,7 +344,7 @@ jobs:
     name: "Fix"
     needs: detect-and-resolve
     if: needs.detect-and-resolve.outputs.should_run == 'true'
-    uses: jon-lipsky-sonarsource/sonar-fix/.github/workflows/fix.yml@main
+    uses: jon-lipsky-sonarsource/sonar-fix/.github/workflows/fix.yml@v1
     with:
       sonar-project-key: ${{ vars.SONAR_PROJECT_KEY }}
       sonar-org: ${{ vars.SONAR_ORG || vars.COPILOT_MCP_SONAR_ORG }}
