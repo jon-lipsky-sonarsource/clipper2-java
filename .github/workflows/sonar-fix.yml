@@ -266,14 +266,31 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.pr-info.outputs.pr_number }}
         run: |
-          # Counts commits on the PR whose message starts with FIX_COMMIT_PREFIX.
-          # This prefix is mandated by the reusable workflow's agent prompt,
-          # so each prior fix run shows up as exactly one matching commit.
-          ATTEMPTS=$(gh api \
+          # Claude/Codex path: count commits whose message starts with
+          # FIX_COMMIT_PREFIX. The workflow owns the commit and mandates
+          # that prefix, so every prior fix run shows up as exactly one
+          # matching commit.
+          FIX_COMMITS=$(gh api \
             "repos/${{ github.repository }}/pulls/${PR_NUMBER}/commits" \
             --paginate \
             --jq "[.[] | select(.commit.message | startswith(\"${FIX_COMMIT_PREFIX}\"))] | length")
-          echo "Prior fix commits on PR #${PR_NUMBER}: ${ATTEMPTS}"
+
+          # Copilot path: Copilot runs out-of-band and uses its own commit
+          # message format, so FIX_COMMITS stays 0 on the Copilot path and
+          # the loop guard never trips. Instead, count how many times our
+          # workflow has already posted an @copilot dispatch comment.
+          COPILOT_DISPATCHES=$(gh api \
+            "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
+            --paginate \
+            --jq '[.[] | select(.body | startswith("@copilot Please fix the following SonarQube"))] | length')
+
+          # Use whichever is higher as the canonical attempt count.
+          if [ "$COPILOT_DISPATCHES" -gt "$FIX_COMMITS" ]; then
+            ATTEMPTS="$COPILOT_DISPATCHES"
+          else
+            ATTEMPTS="$FIX_COMMITS"
+          fi
+          echo "Prior fix commits: ${FIX_COMMITS}, Copilot dispatches: ${COPILOT_DISPATCHES} → attempts=${ATTEMPTS}"
           echo "attempts=${ATTEMPTS}" >> "$GITHUB_OUTPUT"
 
       - name: Decide whether to run fix
@@ -344,7 +361,7 @@ jobs:
     name: "Fix"
     needs: detect-and-resolve
     if: needs.detect-and-resolve.outputs.should_run == 'true'
-    uses: jon-lipsky-sonarsource/sonar-fix/.github/workflows/fix.yml@v1
+    uses: jon-lipsky-sonarsource/sonar-fix/.github/workflows/fix.yml@v1.1
     with:
       sonar-project-key: ${{ vars.SONAR_PROJECT_KEY }}
       sonar-org: ${{ vars.SONAR_ORG || vars.COPILOT_MCP_SONAR_ORG }}
