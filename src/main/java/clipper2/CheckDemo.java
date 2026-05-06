@@ -18,24 +18,14 @@ public class CheckDemo {
 
     private static final Logger LOG = Logger.getLogger(CheckDemo.class.getName());
 
-    // Triggers java:S2390 — CheckDemo's static initializer references
-    // ChildOfCheck.CHILD_CONSTANT, but ChildOfCheck is a subclass of
-    // CheckDemo. The JVM's class-init ordering says ChildOfCheck
-    // can't fully initialize until CheckDemo does, but CheckDemo's
-    // init is currently in progress and depending on the subclass.
-    // Result: the value can be observed as 0 (the default for int)
-    // before ChildOfCheck's own static init runs. Real behavior bug.
-    // Fix: move CHILD_CONSTANT to CheckDemo (or a non-subclass), or
-    // remove the dependency entirely.
-    public static final int CHILD_VALUE = ChildOfCheck.CHILD_CONSTANT;
+    // Avoid java:S2390 by keeping CheckDemo's static initialization
+    // independent of subclasses.
+    public static final int CHILD_VALUE = 42;
 
-    // Triggers java:S2629 — building the log message via string
-    // concatenation pays the formatting cost even when the log level
-    // is filtered out. Fix: parameterized logging
-    // (LOG.log(Level.INFO, "...{0}...", user)) so the message is
-    // assembled only when the log is actually emitted.
+    // Avoid java:S2629 by assembling the log message only when INFO
+    // logging is enabled.
     public void logLogin(String user) {
-        LOG.info("user " + user + " logged in at " + System.currentTimeMillis());
+        LOG.info(() -> "user " + user + " logged in at " + System.currentTimeMillis());
     }
 
     // Triggers java:S2147 — the catch block does nothing but rethrow
