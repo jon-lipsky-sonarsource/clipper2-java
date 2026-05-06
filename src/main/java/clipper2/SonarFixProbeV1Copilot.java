@@ -2,7 +2,6 @@ package clipper2;
 
 public class SonarFixProbeV1Copilot {
     public void run() {
-        // TODO: remove this probe
-        int unused = 42; // S1481: unused variable
+        // probe method — intentionally empty after sonar-fix
     }
 }
