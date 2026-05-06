@@ -1,4 +1,4 @@
-# Per-repo override: route to Codex instead of the central default's Claude.
+# Per-repo override: route to Copilot for this PR's sonar-fix run.
 # Everything else (severities, rules allow/deny, etc.) inherits from
 # config/default.yml in the central sonar-fix repo at run time.
-agent: codex
+agent: copilot
